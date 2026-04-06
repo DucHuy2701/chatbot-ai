@@ -58,7 +58,9 @@ export async function POST(req: Request) {
 
     return new NextResponse(
       JSON.stringify({
-        reply: data.choices?.[0]?.message?.content || "No response",
+        reply: data.choices?.[0]?.message?.content ||
+          data.output?.[0]?.content?.[0]?.text ||
+          "No response",
       }),
       {
         headers: {
@@ -66,6 +68,9 @@ export async function POST(req: Request) {
         },
       }
     );
+
+    console.log("FULL OPENAI RESPONSE:", JSON.stringify(data, null, 2));
+
   } catch (err: any) {
     return new NextResponse(
       JSON.stringify({ error: err.message }),
