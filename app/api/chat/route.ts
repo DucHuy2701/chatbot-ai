@@ -1,5 +1,17 @@
 import { NextResponse } from "next/server";
 
+// ✅ Handle preflight (CORS)
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function POST(req: Request) {
   try {
     let body;
@@ -7,23 +19,27 @@ export async function POST(req: Request) {
     try {
       body = await req.json();
     } catch {
-      return Response.json({
-        error: "Body must be JSON",
-      });
-    }
-
-    if (!body?.message) {
-      return Response.json({
-        error: "Missing message",
-      });
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid JSON" }),
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
     }
 
     const message = body?.message;
 
     if (!message) {
-      return NextResponse.json({
-        error: "Missing message",
-      });
+      return new NextResponse(
+        JSON.stringify({ error: "Missing message" }),
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
     }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -40,14 +56,24 @@ export async function POST(req: Request) {
 
     const data = await response.json();
 
-    return NextResponse.json({
-      reply: data.choices?.[0]?.message?.content || "No response",
-    });
+    return new NextResponse(
+      JSON.stringify({
+        reply: data.choices?.[0]?.message?.content || "No response",
+      }),
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (err: any) {
-    console.error("SERVER ERROR:", err);
-
-    return NextResponse.json({
-      error: err.message,
-    });
+    return new NextResponse(
+      JSON.stringify({ error: err.message }),
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   }
 }
